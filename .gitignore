@@ -8,3 +8,6 @@ Record_*.mp3
 node_modules/
 Thumbs.db
 .DS_Store
+
+.vercel
+.env*
