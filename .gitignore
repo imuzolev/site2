@@ -1,0 +1,10 @@
+# Исходные записи — дубликаты файлов из audio/
+Record_*.mp3
+
+# Служебное
+.vercel/
+.playwright-cli/
+.claude/
+node_modules/
+Thumbs.db
+.DS_Store
