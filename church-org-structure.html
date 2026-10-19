@@ -240,7 +240,7 @@
       <div class="card lead lv1 c4 r1" id="pastor"><div class="title">Пастор</div></div>
       <div class="card side lv1 c5 r1" id="council"><div class="title">Церковный совет</div><span class="who">Иван</span></div>
       <div class="card lead lv1 c4 r2" id="evgeny"><div class="title">Пастор Евгений</div></div>
-      <div class="card side lv1 c5 r2" id="danya"><div class="title">Помощник пастора</div><span class="who">Даня</span></div>
+      <div class="card side lv1 c3 r1" id="danya" style="justify-self: end"><div class="title">Помощник пастора</div><span class="who">Даня</span></div>
     </div>
   </section>
 
@@ -449,7 +449,7 @@
     var P = byId('pastor'), C = byId('council'), E = byId('evgeny'), D = byId('danya');
     wire([[P.r, P.cy], [C.l, P.cy]]);
     wire([[P.cx, P.b], [E.cx, E.t]]);
-    wire([[E.r, E.cy], [D.l, E.cy]]);
+    wire([[P.l, P.cy], [D.r, P.cy]]);
 
     // Уровень 2: Пастор Евгений → Ход служения, горизонталь справа налево
     var Hd = byId('hod'), I = byId('info');
