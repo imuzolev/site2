@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Структура церковного служения</title>
+<style id="page-size">@page { size: A3 landscape; margin: 0; }</style>
+<style>
+  :root {
+    --l1: #6d28d9; --l1-soft: #f5f3ff; --l1-ink: #4c1d95;
+    --l2: #0f766e; --l2-soft: #f0fdfa; --l2-ink: #134e4a;
+    --l3: #1d4ed8; --l3-soft: #eff6ff; --l3-ink: #1e3a8a;
+    --l4: #b45309; --l4-soft: #fffbeb; --l4-ink: #78350f;
+    --l5: #be123c; --l5-soft: #fff1f2; --l5-ink: #881337;
+    --note: #fef08a; --note-edge: #ca8a04; --note-ink: #713f12;
+    --unsure: #c2410c; --unsure-soft: #fff7ed;
+    --wire: #64748b;
+    --ink: #0f172a; --muted: #475569; --chip-edge: #cbd5e1;
+    --desk: #e5e9f0; --paper: #ffffff;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    color: var(--ink);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--desk); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ---------- Панель управления ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 10px 16px; background: rgba(255,255,255,.94);
+    border-bottom: 1px solid #cbd5e1; backdrop-filter: blur(6px);
+    font-size: 15px;
+  }
+  .toolbar b { margin-right: auto; font-size: 16px; }
+  .toolbar button {
+    font: inherit; font-weight: 600; color: var(--ink); cursor: pointer;
+    background: #fff; border: 1px solid #94a3b8; border-radius: 8px; padding: 6px 12px;
+  }
+  .toolbar button:hover { background: #f1f5f9; }
+  .toolbar button.primary { background: var(--l1); border-color: var(--l1); color: #fff; }
+  .toolbar output { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  #stage { padding: 16px; overflow: auto; }
+  #sizer { position: relative; margin: 0 auto; }
+  #chart {
+    position: absolute; left: 0; top: 0; transform-origin: 0 0;
+    width: max-content; background: var(--paper);
+    padding: 36px 48px 40px 84px; border-radius: 18px;
+    box-shadow: 0 6px 30px rgba(15,23,42,.12);
+  }
+  #wires { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; overflow: visible; }
+  #wires path { fill: none; stroke: var(--wire); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  #wires path.spine { stroke-width: 3.5; }
+  #wires path.dashed { stroke: var(--note-edge); stroke-dasharray: 6 6; stroke-width: 2; }
+  #wires circle { fill: var(--wire); }
+
+  /* ---------- Шапка схемы ---------- */
+  .head { position: relative; z-index: 1; margin-bottom: 34px; }
+  .head h1 { margin: 0; font-size: 36px; line-height: 1.15; letter-spacing: -.01em; }
+  .head p { margin: 6px 0 16px; font-size: 17px; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; font-size: 15px; font-weight: 600; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 18px; height: 18px; border-radius: 5px; background: var(--c); }
+  .legend i.n { background: var(--note); border: 2px dashed var(--note-edge); }
+  .legend i.u { background: var(--unsure-soft); border: 2px dashed var(--unsure); }
+  .note.corner-note { position: absolute; right: 0; top: 0; }
+
+  /* ---------- Уровни ---------- */
+  .lv1 { --c: var(--l1); --soft: var(--l1-soft); --dark: var(--l1-ink); }
+  .lv2 { --c: var(--l2); --soft: var(--l2-soft); --dark: var(--l2-ink); }
+  .lv3 { --c: var(--l3); --soft: var(--l3-soft); --dark: var(--l3-ink); }
+  .lv4 { --c: var(--l4); --soft: var(--l4-soft); --dark: var(--l4-ink); }
+  .lv5 { --c: var(--l5); --soft: var(--l5-soft); --dark: var(--l5-ink); }
+
+  .cap {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 10px; width: max-content;
+    font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dark);
+    background: var(--paper); padding: 2px 8px 2px 0;
+  }
+  .cap i {
+    display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px;
+    background: var(--c); color: #fff; font-style: normal; font-size: 13px; letter-spacing: 0;
+  }
+
+  /* ---------- Карточки ---------- */
+  .card {
+    position: relative; z-index: 1;
+    background: var(--soft); border: 2px solid var(--c); border-top-width: 6px; border-radius: 14px;
+    padding: 13px 16px 15px; box-shadow: 0 2px 8px rgba(15,23,42,.08);
+  }
+  .card .title { font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--dark); }
+  .who {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+    font-size: 17px; font-weight: 650; line-height: 1.2; color: var(--ink);
+    background: #fff; border: 1.5px solid var(--c); border-radius: 999px; padding: 4px 12px 4px 8px;
+  }
+  .who::before {
+    content: ""; flex: none; width: 17px; height: 17px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .who.unsure { border-style: dashed; border-color: var(--unsure); }
+  .flag {
+    display: inline-block; margin: 8px 0 0 4px; vertical-align: middle;
+    font-size: 13px; font-weight: 700; line-height: 1.3; color: var(--unsure);
+    background: var(--unsure-soft); border: 1.5px dashed var(--unsure); border-radius: 6px; padding: 2px 8px;
+  }
+  .card.unsure { border-style: dashed; border-top-style: solid; }
+
+  .card.lead { background: var(--l1); border-color: var(--l1-ink); text-align: center; padding: 18px 16px; }
+  .card.lead .title { color: #fff; font-size: 26px; font-weight: 800; }
+  .card.side { background: #fff; }
+  .card.side .title { font-size: 17px; }
+
+  .subs { display: flex; flex-direction: column; gap: 10px; padding: 16px 0 0 44px; }
+  .subs.right { padding: 0 0 0 40px; align-self: center; }
+  .item {
+    position: relative; z-index: 1;
+    background: #fff; border: 1.5px solid var(--chip-edge); border-left: 5px solid var(--c); border-radius: 9px;
+    padding: 8px 12px; font-size: 16px; line-height: 1.3; color: var(--ink);
+    box-shadow: 0 1px 2px rgba(15,23,42,.06);
+  }
+  .item small { display: block; color: var(--muted); font-size: 14px; }
+  .tag {
+    display: inline-block; margin-top: 5px; font-size: 14px; font-weight: 700; color: var(--dark);
+    background: var(--soft); border: 1px solid var(--c); border-radius: 999px; padding: 1px 9px;
+  }
+
+  .note {
+    position: relative; z-index: 1; width: max-content; max-width: 320px;
+    background: var(--note); color: var(--note-ink); border: 2px dashed var(--note-edge); border-radius: 6px;
+    padding: 9px 14px 10px; font-size: 18px; font-weight: 750; line-height: 1.25;
+    box-shadow: 3px 4px 0 rgba(202,138,4,.22); transform: rotate(-1.2deg);
+  }
+  .note small {
+    display: block; margin-bottom: 2px; font-size: 11.5px; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase; opacity: .75;
+  }
+  .note.big { font-size: 24px; padding: 12px 20px 14px; }
+
+  /* ---------- Уровни 1–2: общая сетка колонок ---------- */
+  .top-grid {
+    display: grid; width: max-content; margin: 0 auto;
+    /* 4-я колонка (Пастор → Пастор Евгений → Ход служения) ровно по центру схемы,
+       последняя колонка — пустая, для симметрии */
+    grid-template-columns: 220px 220px 230px 250px 270px 440px;
+    column-gap: 40px;
+  }
+  .lvl1 { row-gap: 46px; align-items: center; margin-top: 18px; }
+  .lvl1 .side { justify-self: start; width: 240px; }
+  .lvl2 { align-items: center; margin-top: 18px; }
+  .lvl2 .note { justify-self: center; margin-bottom: 18px; }
+  .lvl2 .subs { align-self: start; }
+  .c1 { grid-column: 1; } .c2 { grid-column: 2; } .c3 { grid-column: 3; } .c4 { grid-column: 4; } .c5 { grid-column: 5; }
+  .r1 { grid-row: 1; } .r2 { grid-row: 2; } .r3 { grid-row: 3; }
+  .band2 { margin-top: 44px; }
+
+  /* ---------- Уровень 3 ---------- */
+  .band3 { margin-top: 56px; }
+  .l3grid { display: grid; grid-template-columns: repeat(10, 206px); column-gap: 18px; margin-top: 52px; }
+  .l3grid > * { grid-column: var(--col); }
+  .l3grid > .card { grid-row: 1; }
+  .l3grid > .subs { grid-row: 2; }
+
+  /* ---------- Уровни 4–5 ---------- */
+  .bottom { display: flex; justify-content: space-between; align-items: flex-start; gap: 60px; margin-top: 64px; }
+  .hg-wrap { display: flex; flex-direction: column; width: max-content; }
+  .hg-head { display: flex; align-items: center; gap: 44px; margin-top: 18px; }
+  .hg-head .card { width: 320px; }
+  .hg-head .pastors { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: .06em; color: var(--l4); }
+  .chain { display: flex; gap: 28px; margin-top: 56px; }
+  .chain .card { width: 250px; }
+  .projects { margin-top: 56px; padding: 16px 24px 20px; border-top-width: 8px; }
+  .projects .cap { background: none; padding: 0; margin-bottom: 12px; }
+  .projects .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .projects .who { margin: 0; font-size: 22px; padding: 6px 16px 6px 10px; }
+  .projects .who::before { width: 20px; height: 20px; }
+  .projects .colon { font-size: 22px; font-weight: 800; color: var(--dark); margin: 0 4px 0 -4px; }
+  .projects .item { font-size: 20px; font-weight: 650; padding: 8px 16px; }
+  .projects .plus { font-size: 26px; font-weight: 800; color: var(--l5); }
+
+  .todo {
+    position: relative; z-index: 1; width: 560px; margin-top: 52px;
+    background: var(--unsure-soft); border: 2px dashed var(--unsure); border-radius: 14px; padding: 16px 22px 18px;
+  }
+  .todo h2 { margin: 0 0 4px; font-size: 20px; color: var(--unsure); }
+  .todo p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+  .todo ol { margin: 0; padding-left: 22px; font-size: 16px; line-height: 1.45; }
+  .todo li + li { margin-top: 6px; }
+
+  .foot { position: relative; z-index: 1; margin-top: 36px; font-size: 13px; color: var(--muted); }
+
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    html, body { overflow: hidden; }
+    #stage { padding: 0; overflow: visible; }
+    #sizer { margin: 0; }
+    #chart { box-shadow: none; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" role="toolbar" aria-label="Масштаб и печать">
+  <b>Структура церковного служения</b>
+  <button type="button" id="zoom-out" aria-label="Уменьшить">−</button>
+  <output id="zoom-val">100%</output>
+  <button type="button" id="zoom-in" aria-label="Увеличить">+</button>
+  <button type="button" id="zoom-fit">По ширине экрана</button>
+  <button type="button" id="zoom-1">100%</button>
+  <button type="button" id="print" class="primary">Печать / PDF</button>
+</div>
+
+<main id="stage">
+<div id="sizer">
+<div id="chart">
+  <svg id="wires" aria-hidden="true"></svg>
+
+  <header class="head">
+    <h1>Структура церковного служения</h1>
+    <p>Оргструктура по данным с маркерной доски. Все сокращения раскрыты.</p>
+    <div class="legend">
+      <span class="lv1"><i></i>1 · Руководство</span>
+      <span class="lv2"><i></i>2 · Координация и обеспечение</span>
+      <span class="lv3"><i></i>3 · Основные служения</span>
+      <span class="lv4"><i></i>4 · Домашние группы и пасторство</span>
+      <span class="lv5"><i></i>5 · Общецерковные проекты</span>
+      <span><i class="n"></i>Пометка с доски</span>
+      <span><i class="u"></i>Требует уточнения</span>
+    </div>
+    <div class="note corner-note"><small>Пометка на доске</small>Свидетельства?</div>
+  </header>
+
+  <!-- ================= УРОВЕНЬ 1 ================= -->
+  <section class="lv1">
+    <div class="cap"><i>1</i>Руководство</div>
+    <div class="top-grid lvl1">
+      <div class="card lead lv1 c4 r1" id="pastor"><div class="title">Пастор</div></div>
+      <div class="card side lv1 c5 r1" id="council"><div class="title">Церковный совет</div><span class="who">Иван</span></div>
+      <div class="card lead lv1 c4 r2" id="evgeny"><div class="title">Пастор Евгений</div></div>
+      <div class="card side lv1 c5 r2" id="danya"><div class="title">Помощник пастора</div><span class="who">Даня</span></div>
+    </div>
+  </section>
+
+  <!-- ================= УРОВЕНЬ 2 ================= -->
+  <section class="lv2 band2">
+    <div class="cap"><i>2</i>Координация и обеспечение</div>
+    <div class="top-grid lvl2">
+      <div class="note c1 r1"><small>Пометка на доске</small>Объявления</div>
+
+      <div class="card lv2 c1 r2" id="info"><div class="title">Информационное служение</div><span class="who">Саша</span></div>
+      <div class="card lv2 c2 r2" id="youth"><div class="title">Молодежное служение</div><span class="who">Таня</span></div>
+      <div class="card lv2 c3 r2" id="tech"><div class="title">Технический отдел</div><span class="who">Дима</span></div>
+      <div class="card lv2 c4 r2" id="hod"><div class="title">Ход служения</div><span class="who">Поля</span></div>
+      <div class="subs right c5 r2" data-tree="hod" data-dir="right">
+        <div class="item">Хронология</div>
+        <div class="item">Составление объявлений</div>
+        <div class="item">Свидетельства</div>
+        <div class="item">Занятость здания</div>
+      </div>
+
+      <div class="subs c2 r3" data-tree="youth">
+        <div class="item">Домашняя группа</div>
+      </div>
+      <div class="subs c3 r3" data-tree="tech">
+        <div class="item">Пульт</div>
+        <div class="item">Хозяйственная часть</div>
+        <div class="item">Электрика</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= УРОВЕНЬ 3 ================= -->
+  <section class="lv3 band3">
+    <div class="cap"><i>3</i>Основные служения</div>
+    <div class="l3grid" id="ministries">
+      <div class="card lv3" id="m1" style="--col:1"><div class="title">Служение прославления</div><span class="who">Аня</span></div>
+      <div class="subs" data-tree="m1" style="--col:1">
+        <div class="item">Вокал</div>
+        <div class="item">Гитара</div>
+        <div class="item">Пианино</div>
+        <div class="item">Барабаны</div>
+        <div class="item">Пульт</div>
+      </div>
+
+      <div class="card lv3" id="m2" style="--col:2"><div class="title">Медиа служение</div><span class="who">Таня</span></div>
+      <div class="subs" data-tree="m2" style="--col:2">
+        <div class="item">Трансляция</div>
+        <div class="item">Экран</div>
+      </div>
+
+      <div class="card lv3 unsure" id="m3" style="--col:3"><div class="title">Организация мероприятий</div><span class="who unsure">Ксюша?</span><span class="flag">под вопросом</span></div>
+      <div class="subs" data-tree="m3" style="--col:3">
+        <div class="item">Праздники</div>
+      </div>
+
+      <div class="card lv3" id="m4" style="--col:4"><div class="title">Организационное служение</div><span class="who">Артур</span></div>
+      <div class="subs" data-tree="m4" style="--col:4">
+        <div class="item">Мужское служение</div>
+        <div class="item">Женское служение</div>
+      </div>
+
+      <div class="card lv3" id="m5" style="--col:5"><div class="title">Подростковое служение</div><span class="who">Кравцовы</span></div>
+      <div class="subs" data-tree="m5" style="--col:5">
+        <div class="item">Воскресное служение</div>
+        <div class="item">Выезды</div>
+        <div class="item">Домашняя группа<br><span class="tag">Ответственная: Алиса</span></div>
+      </div>
+
+      <div class="card lv3" id="m6" style="--col:6"><div class="title">Женское служение</div><span class="who">Таня</span></div>
+      <div class="subs" data-tree="m6" style="--col:6">
+        <div class="item">Декор</div>
+        <div class="item">Подарки</div>
+        <div class="item">Армия</div>
+      </div>
+
+      <div class="card lv3" id="m7" style="--col:7"><div class="title">Детское служение</div><span class="who">Лена</span></div>
+      <div class="subs" data-tree="m7" style="--col:7">
+        <div class="item">Группа 7–10 лет</div>
+        <div class="item">Группа 4–6 лет</div>
+        <div class="item">Группа 0–4 года</div>
+      </div>
+
+      <div class="card lv3" id="m8" style="--col:8"><div class="title">Служение СОЗО</div><span class="who">Таня</span></div>
+
+      <div class="card lv3" id="m9" style="--col:9"><div class="title">Хозяйственный отдел и Финансы</div><span class="who">Севостьяновы</span></div>
+      <div class="subs" data-tree="m9" style="--col:9">
+        <div class="item">Наличие необходимого</div>
+        <div class="item">Причастие</div>
+        <div class="item">Десятина</div>
+      </div>
+
+      <div class="card lv3" id="m10" style="--col:10"><div class="title">Молитвенное служение</div><span class="who">Куц</span></div>
+      <div class="subs" data-tree="m10" style="--col:10">
+        <div class="item">Воскресная молитва</div>
+        <div class="item">Ходатайственная молитва<small>(ходатайство)</small></div>
+        <div class="item">Пророческая молитва</div>
+        <div class="item">Лидерская молитва</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= УРОВНИ 4–5 ================= -->
+  <div class="bottom">
+    <section class="hg-wrap lv4">
+      <div class="cap"><i>4</i>Домашние группы и пасторство</div>
+      <div class="hg-head">
+        <div class="card lv4" id="hg"><div class="title">Домашние группы</div><div class="pastors">ПАСТОРЫ</div></div>
+        <div class="note big" id="hg-note"><small>Задача</small>Определить ответственность</div>
+      </div>
+      <div class="chain" id="chain">
+        <div class="card lv4"><div class="title">Семейные группы</div><span class="who">Антон</span></div>
+        <div class="card lv4 unsure"><div class="title">Пастор среднего поколения</div><span class="flag">Имя не указано — нужно определить</span></div>
+        <div class="card lv4"><div class="title">Старшее поколение</div><span class="who">Людмила</span></div>
+        <div class="card lv4"><div class="title">Пастор Евгений</div></div>
+      </div>
+      <div class="card lv5 projects" id="projects">
+        <div class="cap"><i>5</i>Общецерковные проекты</div>
+        <div class="row">
+          <span class="who">Ксюша</span><span class="colon">:</span>
+          <span class="item">Мероприятия</span><span class="plus">+</span>
+          <span class="item">Декор</span><span class="plus">+</span>
+          <span class="item">Лагерь</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="todo">
+      <h2>Требует уточнения</h2>
+      <p>Сводка открытых вопросов с доски (не часть структуры).</p>
+      <ol>
+        <li><b>«Свидетельства?»</b> — пометка в правом верхнем углу доски; «Свидетельства» также стоят задачей у «Хода служения» (Поля).</li>
+        <li><b>Организация мероприятий</b> — ответственная под вопросом (Ксюша?).</li>
+        <li><b>Домашние группы — пасторы</b> — определить ответственность.</li>
+        <li><b>Пастор среднего поколения</b> — имя не указано, нужно определить.</li>
+      </ol>
+    </aside>
+  </div>
+
+  <div class="foot">Источник: фотография маркерной доски. Схема свёрстана на HTML/CSS/SVG — масштабируется и печатается без потери качества.</div>
+</div>
+</div>
+</main>
+
+<script>
+(function () {
+  var chart = document.getElementById('chart');
+  var svg = document.getElementById('wires');
+  var sizer = document.getElementById('sizer');
+  var stage = document.getElementById('stage');
+  var zoomVal = document.getElementById('zoom-val');
+  var pageSize = document.getElementById('page-size');
+  var scale = 1, W = 0, H = 0, out = '';
+
+  // Координаты элемента относительно схемы (не зависят от масштаба transform)
+  function pos(el) {
+    var x = 0, y = 0, e = el;
+    while (e && e !== chart) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
+    var w = el.offsetWidth, h = el.offsetHeight;
+    return { l: x, t: y, r: x + w, b: y + h, cx: x + w / 2, cy: y + h / 2 };
+  }
+  function byId(id) { return pos(document.getElementById(id)); }
+
+  // Ортогональная линия со скруглёнными углами
+  function wire(pts, cls) {
+    var R = 10, d = 'M' + pts[0][0] + ',' + pts[0][1];
+    for (var i = 1; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+      var d1 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+      var d2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+      if (!d1 || !d2) { d += ' L' + p1[0] + ',' + p1[1]; continue; }
+      var r = Math.min(R, d1 / 2, d2 / 2);
+      d += ' L' + (p1[0] - (p1[0] - p0[0]) / d1 * r) + ',' + (p1[1] - (p1[1] - p0[1]) / d1 * r) +
+           ' Q' + p1[0] + ',' + p1[1] + ' ' +
+           (p1[0] + (p2[0] - p1[0]) / d2 * r) + ',' + (p1[1] + (p2[1] - p1[1]) / d2 * r);
+    }
+    var last = pts[pts.length - 1];
+    d += ' L' + last[0] + ',' + last[1];
+    out += '<path' + (cls ? ' class="' + cls + '"' : '') + ' d="' + d + '"/>';
+  }
+  function dot(x, y) { out += '<circle cx="' + x + '" cy="' + y + '" r="5"/>'; }
+
+  // Подпункты: вниз (позвоночник под левым краем карточки) или вправо (скобка)
+  function trees() {
+    document.querySelectorAll('[data-tree]').forEach(function (list) {
+      var p = byId(list.dataset.tree);
+      var items = Array.prototype.map.call(list.children, pos);
+      var first = items[0], last = items[items.length - 1];
+      if (list.dataset.dir === 'right') {
+        var sx = first.l - 20;
+        wire([[p.r, p.cy], [sx, p.cy]]);
+        wire([[first.l, first.cy], [sx, first.cy], [sx, last.cy], [last.l, last.cy]]);
+        items.slice(1, -1).forEach(function (it) { wire([[sx, it.cy], [it.l, it.cy]]); });
+      } else {
+        var x = p.l + 24;
+        wire([[x, p.b], [x, last.cy], [last.l, last.cy]]);
+        items.slice(0, -1).forEach(function (it) { wire([[x, it.cy], [it.l, it.cy]]); });
+      }
+    });
+  }
+
+  function draw() {
+    out = '';
+    W = chart.offsetWidth; H = chart.offsetHeight;
+
+    // Уровень 1
+    var P = byId('pastor'), C = byId('council'), E = byId('evgeny'), D = byId('danya');
+    wire([[P.r, P.cy], [C.l, P.cy]]);
+    wire([[P.cx, P.b], [E.cx, E.t]]);
+    wire([[E.r, E.cy], [D.l, E.cy]]);
+
+    // Уровень 2: Пастор Евгений → Ход служения, горизонталь справа налево
+    var Hd = byId('hod'), I = byId('info');
+    wire([[E.cx, E.b], [Hd.cx, Hd.t]]);
+    wire([[Hd.l, Hd.cy], [I.r, Hd.cy]]);
+
+    // Подпункты (технический отдел, молодежь, ход служения, 10 служений)
+    trees();
+
+    // Левая магистраль: Информационное служение → вниз по левому краю → Домашние группы
+    var spineX = 40;
+    var stubY = I.b + 28;
+    var HG = byId('hg');
+    wire([[I.cx, I.b], [I.cx, stubY], [spineX, stubY], [spineX, HG.cy], [HG.l, HG.cy]], 'spine');
+
+    // Уровень 3: горизонтальная шина над 10 служениями
+    var ms = Array.prototype.filter.call(document.getElementById('ministries').children, function (el) {
+      return el.classList.contains('card');
+    }).map(pos);
+    var busY = ms[0].t - 30;
+    wire([[spineX, busY], [ms[ms.length - 1].cx, busY]], 'spine');
+    dot(spineX, busY);
+    ms.forEach(function (m) { wire([[m.cx, busY], [m.cx, m.t]]); });
+
+    // Уровень 4: пометка-задача и цепочка пасторов
+    var N = byId('hg-note');
+    wire([[HG.r, HG.cy], [N.l, HG.cy]], 'dashed');
+    var ch = Array.prototype.map.call(document.getElementById('chain').children, pos);
+    var chY = ch[0].t - 28;
+    wire([[HG.cx, HG.b], [HG.cx, chY]]);
+    wire([[Math.min(ch[0].cx, HG.cx), chY], [ch[ch.length - 1].cx, chY]]);
+    ch.forEach(function (c) { wire([[c.cx, chY], [c.cx, c.t]]); });
+
+    // Уровень 5: вертикальные штрихи вниз к общему блоку
+    var PR = byId('projects');
+    ch.forEach(function (c) { wire([[c.cx, c.b], [c.cx, PR.t]]); });
+
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = out;
+    pageSize.textContent = '@page { size: ' + (W + 2) + 'px ' + (H + 4) + 'px; margin: 0; }';
+    apply();
+  }
+
+  function apply() {
+    chart.style.transform = scale === 1 ? '' : 'scale(' + scale + ')';
+    sizer.style.width = W * scale + 'px';
+    sizer.style.height = H * scale + 'px';
+    zoomVal.textContent = Math.round(scale * 100) + '%';
+  }
+  function setScale(s) { scale = Math.max(0.2, Math.min(2.5, s)); apply(); }
+  function fitScale() { return Math.min(1, (stage.clientWidth - 32) / W); }
+
+  document.getElementById('zoom-in').onclick = function () { setScale(scale * 1.15); };
+  document.getElementById('zoom-out').onclick = function () { setScale(scale / 1.15); };
+  document.getElementById('zoom-1').onclick = function () { setScale(1); };
+  document.getElementById('zoom-fit').onclick = function () { setScale(fitScale()); };
+  document.getElementById('print').onclick = function () { window.print(); };
+
+  // Печать: всегда в масштабе 100%, одна страница точно по размеру схемы
+  var saved = null;
+  function beforePrint() { if (saved === null) { saved = scale; scale = 1; draw(); } }
+  function afterPrint() { if (saved !== null) { scale = saved; saved = null; apply(); } }
+  window.addEventListener('beforeprint', beforePrint);
+  window.addEventListener('afterprint', afterPrint);
+  if (window.matchMedia) {
+    var mq = window.matchMedia('print');
+    if (mq.addEventListener) mq.addEventListener('change', function (e) { e.matches ? beforePrint() : afterPrint(); });
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(chart);
+  window.addEventListener('resize', draw);
+
+  draw();
+  setScale(Math.max(0.35, fitScale()));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
